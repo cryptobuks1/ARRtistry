@@ -40,5 +40,13 @@ module.exports = {
       gas: 7000000
     }
   },
-  plugins: ["solidity-coverage"],
+
+  api_keys: {
+    etherscan: "QEJRXJWFP2MZQ7T834TR2FR9J56XDVARXK"
+  },
+
+  plugins: [
+    "solidity-coverage",
+    "truffle-plugin-verify"
+  ],
 };
