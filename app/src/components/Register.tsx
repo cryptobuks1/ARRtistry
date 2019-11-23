@@ -510,7 +510,6 @@ class Register extends React.Component<ContractProps, RegisterState> {
           </Col>
         </Row>
         <TransactionLoadingModal
-          onHide={() => this.setState({ submitted: false })}
           submitted={this.state.submitted}
           title="Submitting your Artifact..."
         />
