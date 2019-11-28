@@ -36,7 +36,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
   fullscreen,
   children,
 }) => {
-  const path = `artifact/${id}`;
+  const path = `/artifact/${id}`;
   return (
     <Card className="shadow">
       <Card.Body>
@@ -60,13 +60,11 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({
         {children}
         <hr/>
         {fields
-          ? <Card.Text>
-            <Form>
-              <PlaintextField label='Creation Date' value={fields.artifactCreationDate} />
-              <PlaintextField label='Medium' value={fields.medium}/>
-              <PlaintextField label='Size' value={fields.height + ' x ' + fields.width} />
-            </Form>
-          </Card.Text>
+          ? <Form>
+            <PlaintextField label='Creation Date' value={fields.artifactCreationDate} />
+            <PlaintextField label='Medium' value={fields.medium}/>
+            <PlaintextField label='Size' value={fields.height + ' x ' + fields.width} />
+          </Form>
           : <CenterSpinner />
         }
         { !fullscreen
