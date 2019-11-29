@@ -15,7 +15,7 @@ import { ERC721ApprovalEnumerable } from "./ERC721ApprovalEnumerable.sol";
  */
 contract ArtifactRegistry is IArtifactRegistry, Ownable, ERC721Full, ERC721ApprovalEnumerable {
 
-  event RecordSale(address indexed from, address indexed to, uint256 tokenId, uint price, string location, string date);
+  event RecordSale(address indexed from, address indexed to, uint256 tokenId, string price, string location, string date);
 
   using Counters for Counters.Counter;
 
@@ -49,12 +49,26 @@ contract ArtifactRegistry is IArtifactRegistry, Ownable, ERC721Full, ERC721Appro
     return (artwork.artist, artwork.metaUri);
   }
 
-  function transfer(address who, address recipient, uint256 tokenId, string memory metaUri, uint price, string memory location, string memory date, bool arr) public {
+  function transfer(
+    address who,
+    address recipient,        // encrypted
+    string memory recipientEnc,
+    uint256 tokenId,
+    string memory metaUri,
+    uint price,               // encrypted
+    string memory priceEnc,
+    string memory location,
+    string memory date,
+    bool arr) public {
+
+    // Need to decrypt here - how??
+
     safeTransferFrom(who, recipient, tokenId);
 
     Artifact storage artwork = artifacts[tokenId];
     artwork.metaUri = metaUri;
 
+    // TODO: should we use the encrypted version here? who can see this
     if (arr) {
       // Create a new ARR
       IGovernance.ARR memory arr;
@@ -68,7 +82,7 @@ contract ArtifactRegistry is IArtifactRegistry, Ownable, ERC721Full, ERC721Appro
       governance.pushARR(arr);
     }
 
-    emit RecordSale(who, recipient, tokenId, price, location, date);
+    emit RecordSale(who, recipient, tokenId, priceEnc, location, date);
   }
 
   function getTokenIdsOfOwner(address owner) public view returns (uint[] memory) {

@@ -9,6 +9,7 @@ import { EventData } from 'web3-eth-contract';
 import { useNameServiceContext } from '../providers/NameServiceProvider';
 import { useContractContext } from '../providers/ContractProvider';
 import { useWeb3Context } from '../providers/Web3Provider';
+import { encryptForIpfs } from "../helper/encrypt";
 
 interface TransferArtifactProps {
   tokenId: number;
@@ -55,33 +56,8 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
 
   const { addressFromName } = useNameServiceContext();
   const { ArtifactRegistry } = useContractContext();
+  // const { Governance } = useContractContext();
   const { accounts } = useWeb3Context();
-
-  const saveMetaData = (jsonData: string): Promise<string> => {
-    const jsonDataBuffer = Buffer.from(JSON.stringify(jsonData));
-    const files = Array(jsonDataBuffer);
-
-    return ipfs.add([...files], { progress: (prog: any) => console.log(`received: ${prog}`) })
-      .then((response: any) => 'https://ipfs.io/ipfs/' + response[0].hash);
-  };
-
-  const addProvenance = (price: string, buyers: string[],
-    seller: string, location: string, date: string): Promise<string> => {
-    return fetch(metaUri)
-      .then((response: any) => response.json())
-      .then((jsonData: any) => {
-        jsonData.previousSalePrice = price;
-        jsonData.saleProvenance.push({
-          price: (parseFloat(price) * 100).toString(),
-          location: location,
-          buyers: buyers,
-          seller: seller,
-          date: date,
-        });
-
-        return saveMetaData(jsonData);
-      });
-  };
 
   const transferArtwork = async (_: React.FormEvent): Promise<void> => {
     let owner = '';
@@ -90,15 +66,18 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
     const recipientAddress = await addressFromName(fields.recipientName);
     const address = await ArtifactRegistry.methods.ownerOf(tokenId).call();
     owner = address;
-    const provenanceHash = await addProvenance(
-      fields.price,
-      [recipientAddress],
-      owner,
-      fields.location,
-      fields.date,
-    );
 
     const eventOptions = { fromBlock: 0 };
+
+    // TODO: we need to be able to get the public keys of all moderators - NOT the same as address in solidity
+    // Get all moderators to encrypt a copy for
+    // const moderators = await Governance.moderators.call();
+    // console.log('moderators are: ' + moderators);
+
+    // Encrypt the recipient address and price so only recipient and moderators can read them
+    const recipientAddressEnc = JSON.stringify(await encryptForIpfs([recipientAddress], recipientAddress));
+    const priceEnc = JSON.stringify(await encryptForIpfs([recipientAddress], fields.price));
+    console.log('encrypted: ' + recipientAddressEnc + '\n' + priceEnc);
 
     ArtifactRegistry.getPastEvents('RecordSale', eventOptions)
       .then((events: EventData[]) => {
@@ -110,9 +89,11 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
         return ArtifactRegistry.methods.transfer(
           owner,
           recipientAddress,
+          recipientAddressEnc,
           tokenId,
-          provenanceHash,
+          "", // provenanceHash,
           (parseFloat(fields.price) * 100).toString(),
+          priceEnc,
           fields.location,
           fields.date,
           takesArr,
