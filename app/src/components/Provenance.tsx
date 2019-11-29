@@ -134,8 +134,9 @@ export const Provenance: React.FC<{tokenId: number}> = ({ tokenId }) => {
     const options = { fromBlock: 0 };
 
     const registration = ArtifactRegistry.getPastEvents('Transfer', options)
-      .then((events: EventData[]) => events.filter(e => e.returnValues.tokenId === tokenId.toString())
-        .filter(e => e.returnValues.from === '0x0000000000000000000000000000000000000000'),
+      .then((events: EventData[]) => events.filter(e =>
+        e.returnValues.tokenId === tokenId.toString() && e.returnValues.from === '0x0000000000000000000000000000000000000000'
+        )
       )
       .then((events: EventData[]) => events.map(async (event) => {
         const timestamp = await web3.eth.getBlock(event.blockNumber).then((block) => block.timestamp);
