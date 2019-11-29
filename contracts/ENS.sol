@@ -15,8 +15,6 @@ contract ENSResolver {
     || interfaceID == 0x691f3431;
   }
 
-  // TODO(mm): remove this hint disable
-  // solhint-disable-next-line no-unused-vars
   function addr(bytes32 nodeID) public view returns (address) {
     return addresses[nodeID];
   }
