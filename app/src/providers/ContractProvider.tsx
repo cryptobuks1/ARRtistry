@@ -7,6 +7,7 @@ import Governance from '../contracts/Governance.json';
 import ArtifactApplication from '../contracts/ArtifactApplication.json';
 import ArtifactRegistry from '../contracts/ArtifactRegistry.json';
 import Artists from '../contracts/Artists.json';
+import ARRRegistry from '../contracts/ARRRegistry.json';
 
 import { ContractListType } from '../helper/contracts';
 
@@ -23,17 +24,28 @@ export const ContractProvider: React.FC = ({ children }) => {
       const applicationAddr = await addressFromName('application.artistry.test');
       const registryAddr = await addressFromName('registry.artistry.test');
       const artistsAddr = await addressFromName('artists.artistry.test');
+      const arrAddr = await addressFromName('arr.artistry.test');
 
       const governance = new web3.eth.Contract(Governance.abi, governanceAddr);
       const artifactApplication = new web3.eth.Contract(ArtifactApplication.abi, applicationAddr);
       const artifactRegistry = new web3.eth.Contract(ArtifactRegistry.abi, registryAddr);
       const artists = new web3.eth.Contract(Artists.abi, artistsAddr);
+      const arr = new web3.eth.Contract(ARRRegistry.abi, arrAddr);
+
+      console.log('Contracts provided:', {
+        governance: governanceAddr, 
+        application: applicationAddr, 
+        registry: registryAddr,
+        artists: artistsAddr,
+        arr: arrAddr
+      });
 
       const contracts = {
         Governance: governance,
         ArtifactApplication: artifactApplication,
         ArtifactRegistry: artifactRegistry,
         Artists: artists,
+        ArrRegistry: arr
       };
 
       setContracts(contracts);
@@ -44,8 +56,6 @@ export const ContractProvider: React.FC = ({ children }) => {
   if (!contracts) {
     return <Loading/>;
   }
-
-  console.log('Contracts provided');
 
   return (
     <ContractContext.Provider value={contracts}>

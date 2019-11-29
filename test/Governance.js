@@ -184,11 +184,11 @@ contract('Governance', async accounts => {
       });
     });
 
-    describe('getARRs', async () => {
-      it('should return zero length for no ARRs', async () => {
-        const arrLen = await governance.getARRLength();
-        expect(arrLen).to.eql(toBN(0));
-      });
-    });
+    // describe('getARRs', async () => {
+    //   it('should return zero length for no ARRs', async () => {
+    //     const arrLen = await governance.getARRLength();
+    //     expect(arrLen).to.eql(toBN(0));
+    //   });
+    // });
   });
 }); // end Registry contract

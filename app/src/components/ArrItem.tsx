@@ -21,11 +21,11 @@ interface ArrItemType {
 const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
   const [arr, setArr] = React.useState<ArrItemType>();
 
-  const { ArtifactApplication } = useContractContext();
+  const { ArrRegistry } = useContractContext();
 
   React.useEffect(() => {
     const loadArr = async (): Promise<void> => {
-      const arrData = await ArtifactApplication.methods.getARR(id).call();
+      const arrData = await ArrRegistry.methods.retrieve(id).call();
       const arr = {
         from: arrData[0],
         to: arrData[1],
@@ -38,7 +38,7 @@ const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
     };
 
     loadArr();
-  }, [ArtifactApplication, id]);
+  }, [ArrRegistry, id]);
 
   if (!arr) {
     return null;
