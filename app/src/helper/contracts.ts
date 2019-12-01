@@ -4,6 +4,8 @@ export type ArtifactRegistry = any;
 export type Artists = any;
 export type Ens = any;
 export type ArrRegistry = any;
+export type ERC20 = any;
+export type RoyaltyDistributor = any;
 
 export interface ContractListType {
   Governance: Governance;
@@ -11,4 +13,6 @@ export interface ContractListType {
   ArtifactRegistry: ArtifactRegistry;
   Artists: Artists;
   ArrRegistry: ArrRegistry;
+  RoyaltyDistributor: RoyaltyDistributor;
+  Eurs: ERC20;
 }

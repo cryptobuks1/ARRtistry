@@ -9,6 +9,8 @@ import { useNameServiceContext } from '../providers/NameServiceProvider';
 import { useContractContext } from '../providers/ContractProvider';
 import { useWeb3Context } from '../providers/Web3Provider';
 
+import { toast } from 'react-toastify'; 
+
 interface TransferArtifactProps {
   tokenId: number;
   metaUri: string;
@@ -53,8 +55,8 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
   const [submitted, setSubmitted] = React.useState<boolean>(false);
 
   const { addressFromName } = useNameServiceContext();
-  const { ArtifactRegistry } = useContractContext();
-  const { accounts } = useWeb3Context();
+  const { ArtifactRegistry, Eurs, RoyaltyDistributor } = useContractContext();
+  const { web3, accounts } = useWeb3Context();
 
   const saveMetaData = (jsonData: string): Promise<string> => {
     const jsonDataBuffer = Buffer.from(JSON.stringify(jsonData));
@@ -90,6 +92,7 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
     const address = await ArtifactRegistry.methods.ownerOf(tokenId).call();
     owner = address;
     console.log('Getting owner:', owner);
+    const provenanceToast = toast("Adding Provenance Record to IPFS", { autoClose: false });
     const provenanceHash = await addProvenance(
       fields.price,
       [recipientAddress],
@@ -97,16 +100,18 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
       fields.location,
       fields.date,
     );
-    console.log('Provenance Hash added:', provenanceHash);
+    toast.update(provenanceToast, { render: `Provenance added @${provenanceHash}`, type: toast.TYPE.SUCCESS, autoClose: 5000 });
 
     const takesArr = ARR_LOCATIONS.includes(fields.location);
+    const salePrice = parseFloat(fields.price) * 100; // Sale price in cents.
 
+    const transferToast = toast("Starting transfer", { autoClose: false });
     ArtifactRegistry.methods.transfer(
       owner,
       recipientAddress,
       tokenId,
       provenanceHash,
-      (parseFloat(fields.price) * 100).toString(),
+      salePrice.toString(),
       fields.location,
       fields.date,
       takesArr,
@@ -115,13 +120,43 @@ const TransferArtifact: React.FC<TransferArtifactProps> = ({ tokenId, metaUri })
         from: accounts[0],
         gasLimit: 6000000,
       },
-    ).then(() => {
+    )
+    .once('transactionHash', (hash: any) => { toast.update(transferToast, { render: `Transfer accepted #${hash}`, type: toast.TYPE.INFO }); })
+    .once('receipt', (receipt: any) => { toast.update(transferToast, { render: `Transfer recieved`, type: toast.TYPE.INFO }); })
+    .on('confirmation', (confNumber: any, receipt: any) => { console.log(confNumber, receipt); })
+    .on('error', (error: any) => { 
+      console.log(error);
+      toast.update(transferToast, { render: `Transfer failed`, type: toast.TYPE.ERROR, autoClose: 5000 });
       setSubmitted(false);
-    }).catch((err: any) => {
-      // rejection, usually
-      console.log(err);
-      setSubmitted(false);
+    })
+    .then((receipt: any) => {
+      toast.update(transferToast, { render: `Transfer successful`, type: toast.TYPE.SUCCESS, autoClose: 5000 });
+      console.log("Mined: ", receipt);
     });
+
+    if (takesArr) {
+      const arrToast = toast("Requesting ARR", { autoClose: false });
+      const arrDue: number = await RoyaltyDistributor.methods.calculateARR(salePrice).call();
+      
+      toast.update(arrToast, { render: `ARR due €${arrDue / 100}`, type: toast.TYPE.INFO });
+
+      console.log(web3.eth.abi.encodeParameters(['uint'], [tokenId]), web3.eth.abi.encodeParameter('uint', tokenId))
+      Eurs.methods.approveAndCall(RoyaltyDistributor.options.address, arrDue, web3.eth.abi.encodeParameters(['uint'], [tokenId]))
+        .send({ from: accounts[0] })
+        .once('transactionHash', (hash: any) => { toast.update(arrToast, { render: `ARR accepted #${hash}`, type: toast.TYPE.INFO }); })
+        .once('receipt', (receipt: any) => { toast.update(arrToast, { render: `ARR recieved`, type: toast.TYPE.INFO }); })
+        .on('confirmation', (confNumber: any, receipt: any) => { console.log(confNumber, receipt); })
+        .on('error', (error: any) => { 
+          console.log(error);
+          toast.update(arrToast, { render: `ARR failed`, type: toast.TYPE.ERROR, autoClose: 5000 });
+          setSubmitted(false);
+        })
+        .then((receipt: any) => {
+          toast.update(arrToast, { render: `ARR Transfer successful`, type: toast.TYPE.SUCCESS, autoClose: 5000 });
+          console.log("Mined: ", receipt);
+        });
+
+    }
   };
 
   const inputChangeHandler = (event: InputChangeEvent): void => {

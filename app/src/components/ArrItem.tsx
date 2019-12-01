@@ -16,6 +16,7 @@ interface ArrItemType {
   price: number;
   arr: number;
   location: string;
+  paid: boolean;
 }
 
 const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
@@ -27,13 +28,15 @@ const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
     const loadArr = async (): Promise<void> => {
       const arrData = await ArrRegistry.methods.retrieve(id).call();
       const arr = {
-        from: arrData[0],
-        to: arrData[1],
-        tokenId: arrData[2],
-        price: arrData[3] / 100,
+        from: arrData.from,
+        to: arrData.to,
+        tokenId: arrData.tokenId,
+        price: arrData.price / 100,
         arr: arrData[4] / 100,
-        location: arrData[5],
+        location: arrData.location,
+        paid: arrData.paid
       };
+      console.log(arrData);
       setArr(arr);
     };
 
@@ -47,7 +50,7 @@ const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
   return (
     <Card>
       <Card.Body>
-        <Card.Title><span className="text-muted text-capitalize">#{id}</span></Card.Title>
+  <Card.Title><span className="text-muted text-capitalize">#{id} {arr.paid ? 'Paid' : 'Outstanding'}</span></Card.Title>
         <Card.Subtitle className="mb-2 text-muted"></Card.Subtitle>
         <Form>
           <PlaintextField label='Piece' value={arr.tokenId.toString()} />
@@ -58,9 +61,6 @@ const ArrItem: React.FC<ArrItemProps> = ({ id }) => {
           <PlaintextField label='ARR' value={'€' + arr.arr} />
         </Form>
       </Card.Body>
-      <Card.Footer>
-        <small className="text-muted">Last updated 3 mins ago</small>
-      </Card.Footer>
     </Card>
   );
 };
