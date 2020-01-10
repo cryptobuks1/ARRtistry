@@ -33,8 +33,6 @@ module.exports = async (deployer, network, accounts) => {
   await artists.addArtist('https://ipfs.globalupload.io/QmWM8w6WxW7GZSvrc4pGQJ2eiANzDKfx5xsBxH2qozqYfS');
   await governance.approveArtist('0x67EDE48B355DA3fb5d5fB6e5964DaB9fDA56aADe');
 
-
-
   await newLabel(
     'artists',
     owner,
